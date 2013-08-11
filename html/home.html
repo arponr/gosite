@@ -1,0 +1,14 @@
+{{define "about_active"}}{{end}}
+{{define "blog_active"}} class="active"{{end}}
+{{define "contact_active"}}{{end}}
+
+{{define "section"}}blog{{end}}
+
+{{define "content"}}
+{{range .}}
+<div class="preview_created">&mdash; {{.Created | date}} &mdash;</div>
+<span class="preview_title"><a href="/post/{{.Slug}}">{{.Title}}</span></a>
+&middot;
+<span class="preview_text">{{printf "%s" .Preview | safe}}</span>
+{{end}}
+{{end}}

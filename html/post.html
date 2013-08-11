@@ -1,0 +1,15 @@
+{{define "about_active"}}{{end}}
+{{define "blog_active"}} class="active"{{end}}
+{{define "contact_active"}}{{end}}
+
+{{define "section"}}blog{{end}}
+
+{{define "content"}}
+<div class="post_title">{{.Title}}</div>
+<div class="post_created">{{.Created | date}}</div>
+<div class="post_text">
+  {{printf "%s" .Content | safe}}
+</div>
+<div class="post_edited">Last edit: {{.Edited | datetime}}</div>
+{{end}}
+

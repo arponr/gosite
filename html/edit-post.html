@@ -1,0 +1,22 @@
+{{define "about_active"}}{{end}}
+{{define "blog_active"}} class="active"{{end}}
+{{define "contact_active"}}{{end}}
+
+{{define "section"}}blog{{end}}
+
+{{define "content"}}
+<form action="/save-post/{{.Slug}}" method="POST">
+  <div>
+	<textarea name="title" rows="1" cols="80">{{printf "%s" .Title}}</textarea>
+  </div>
+  <div>
+	<textarea name="preview" rows="10" cols="80">{{printf "%s" .Preview}}</textarea>
+  </div>
+  <div>
+	<textarea name="content" rows="20" cols="80">{{printf "%s" .Content}}</textarea>
+  </div>
+  <div>
+	<input type="submit" value="Save">
+  </div>
+</form>
+{{end}}
