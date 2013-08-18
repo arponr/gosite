@@ -1,15 +1,20 @@
-{{define "about_active"}}{{end}}
-{{define "blog_active"}} class="active"{{end}}
-{{define "contact_active"}}{{end}}
-
-{{define "section"}}blog{{end}}
+{{define "nav_a"}}{{end}}
+{{define "nav_b"}} active{{end}}
+{{define "nav_c"}}{{end}}
 
 {{define "content"}}
-<div class="post_title">{{.Title}}</div>
-<div class="post_created">{{.Created | date}}</div>
-<div class="post_text">
-  {{printf "%s" .Content | safe}}
-</div>
-<div class="post_edited">Last edit: {{.Edited | datetime}}</div>
+<article class="post">
+  <header class="info">
+    <img class="image" src="{{.ImgUrl}}">
+    <h1 class="title">{{.Title}}</h1>
+    <time class="created">{{.Created | date}}</time>
+  </header>
+  <div class="text">
+    {{.Content | markdown | printf "%s" | safe}}
+  </div>
+  <footer class="info">
+    <time class="edited">Last edit: {{.Edited | datetime}}</time>
+  </footer>
+</article>
 {{end}}
 

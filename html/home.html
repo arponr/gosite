@@ -1,14 +1,17 @@
-{{define "about_active"}}{{end}}
-{{define "blog_active"}} class="active"{{end}}
-{{define "contact_active"}}{{end}}
-
-{{define "section"}}blog{{end}}
+{{define "nav_a"}}{{end}}
+{{define "nav_b"}} active{{end}}
+{{define "nav_c"}}{{end}}
 
 {{define "content"}}
-{{range .}}
-<div class="preview_created">&mdash; {{.Created | date}} &mdash;</div>
-<span class="preview_title"><a href="/post/{{.Slug}}">{{.Title}}</span></a>
-&middot;
-<span class="preview_text">{{printf "%s" .Preview | safe}}</span>
+<section>
+  {{range .}}
+  <article class="preview">
+    <h1 class="title"><a href="/post/{{.Slug}}">{{.Title}}</a></h1>
+    <time class="created">({{.Created | date}})</time>.
+    <span class="text">
+      {{.Preview | markdown | printf "%s" | safe}}
+    </span>
+  </article>
+</section>
 {{end}}
 {{end}}

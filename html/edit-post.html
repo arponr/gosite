@@ -1,22 +1,13 @@
-{{define "about_active"}}{{end}}
-{{define "blog_active"}} class="active"{{end}}
-{{define "contact_active"}}{{end}}
-
-{{define "section"}}blog{{end}}
+{{define "nav_a"}}{{end}}
+{{define "nav_b"}} active{{end}}
+{{define "nav_c"}}{{end}}
 
 {{define "content"}}
-<form action="/save-post/{{.Slug}}" method="POST">
-  <div>
-	<textarea name="title" rows="1" cols="80">{{printf "%s" .Title}}</textarea>
-  </div>
-  <div>
-	<textarea name="preview" rows="10" cols="80">{{printf "%s" .Preview}}</textarea>
-  </div>
-  <div>
-	<textarea name="content" rows="20" cols="80">{{printf "%s" .Content}}</textarea>
-  </div>
-  <div>
-	<input type="submit" value="Save">
-  </div>
+<form class="edit_post" action="/save-post/{{.Slug}}" method="POST">
+  <textarea name="title" class="title">{{.Title}}</textarea>
+  <textarea name="img_url" class="img_url">{{.ImgUrl}}</textarea>
+  <textarea name="preview" class="preview">{{printf "%s" .Preview}}</textarea>
+  <textarea name="content" class="content">{{printf "%s" .Content}}</textarea>
+  <input class="save" type="submit" value="save post">
 </form>
 {{end}}

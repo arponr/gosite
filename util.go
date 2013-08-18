@@ -1,27 +1,32 @@
-package logic
+package main
 
 import (
 	"html/template"
 	"net/http"
 	"regexp"
 	"time"
+
+	"github.com/russross/blackfriday"
 )
 
 const (
-	fmtDatetime = "2 Jan 2006, 3:04pm"
 	fmtDate     = "2 Jan 2006"
+	fmtDatetime = "2 Jan 2006, 3:04pm"
 )
 
-func datetime(t time.Time) interface{} { return t.Format(fmtDatetime) }
 func date(t time.Time) interface{}     { return t.Format(fmtDate) }
+func datetime(t time.Time) interface{} { return t.Format(fmtDatetime) }
 func safe(s string) interface{}        { return template.HTML(s) }
+func markdown(b []byte) interface{}    { return blackfriday.MarkdownCommon(b) }
 
 func buildTemplate(files ...string) *template.Template {
 	files = append(files, "html/dne.html", "html/base.html")
 	return template.Must(template.New("").Funcs(template.FuncMap{
-		"safe":     safe,
+		"date":     date,
 		"datetime": datetime,
-		"date":     date}).ParseFiles(files...))
+		"markdown": markdown,
+		"safe":     safe,
+	}).ParseFiles(files...))
 }
 
 var (
