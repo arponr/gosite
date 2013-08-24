@@ -179,7 +179,7 @@ p {
 }
 
 .post .text ul, ol {
-    margin-left: 35px;
+    margin: 5px 0 0 35px;
 }
 
 .post .text ul {
