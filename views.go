@@ -1,9 +1,11 @@
 package main
 
 import (
+	"appengine/user"
+	"net/http"
+
 	ae "appengine"
 	ds "appengine/datastore"
-	"net/http"
 )
 
 func getPost(r *http.Request, slug string) (ae.Context, *ds.Key, *Post, error) {
@@ -17,33 +19,31 @@ func getPost(r *http.Request, slug string) (ae.Context, *ds.Key, *Post, error) {
 func viewPost(w http.ResponseWriter, r *http.Request, slug string) {
 	c, _, p, err := getPost(r, slug)
 	if err == ds.ErrNoSuchEntity {
-		render(w, "dne", nil)
+		serveDne(w)
 		return
 	}
 	if err != nil {
 		serveError(w, err)
 		return
 	}
-	if !p.Public {
-		adminAuth(w, r, c)
+	if !p.Public && !user.IsAdmin(c) {
+		serveDne(w)
 		return
 	}
 	render(w, "post", p)
 }
 
 func editPost(w http.ResponseWriter, r *http.Request, slug string) {
-	c, _, p, err := getPost(r, slug)
-	adminAuth(w, r, c)
+	_, _, p, err := getPost(r, slug)
 	if err != nil && err != ds.ErrNoSuchEntity {
 		serveError(w, err)
 		return
 	}
-	render(w, "edit-post", p)
+	render(w, "editpost", p)
 }
 
 func savePost(w http.ResponseWriter, r *http.Request, slug string) {
 	c, k, p, err := getPost(r, slug)
-	adminAuth(w, r, c)
 	create := err == ds.ErrNoSuchEntity
 	if err != nil && !create {
 		serveError(w, err)
@@ -58,7 +58,11 @@ func savePost(w http.ResponseWriter, r *http.Request, slug string) {
 	http.Redirect(w, r, "/post/"+slug, http.StatusFound)
 }
 
-func viewHome(w http.ResponseWriter, r *http.Request) {
+func viewAbout(w http.ResponseWriter, r *http.Request) {
+	render(w, "about", nil)
+}
+
+func viewBlog(w http.ResponseWriter, r *http.Request) {
 	c := ae.NewContext(r)
 	q := ds.NewQuery("post").Order("-Created").Limit(10)
 	var ps []*Post
@@ -66,17 +70,21 @@ func viewHome(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		serveError(w, err)
 	}
-	render(w, "home", ps)
+	render(w, "blog", ps)
 }
 
-func viewAbout(w http.ResponseWriter, r *http.Request) {
-	render(w, "about", nil)
+func viewHome(w http.ResponseWriter, r *http.Request) {
+	if len(r.URL.Path) != 1 {
+		serveDne(w)
+		return
+	}
+	viewBlog(w, r)
 }
 
 func init() {
 	http.HandleFunc(handler("/post/", viewPost))
-	http.HandleFunc(handler("/edit-post/", editPost))
-	http.HandleFunc(handler("/save-post/", savePost))
 	http.HandleFunc("/about/", viewAbout)
 	http.HandleFunc("/", viewHome)
+	http.HandleFunc(handler("/admin/editpost/", editPost))
+	http.HandleFunc(handler("/admin/savepost/", savePost))
 }

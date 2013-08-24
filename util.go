@@ -1,14 +1,11 @@
 package main
 
 import (
-	ae "appengine"
-	"appengine/user"
+	"github.com/russross/blackfriday"
 	"html/template"
 	"net/http"
 	"regexp"
 	"time"
-
-	"github.com/russross/blackfriday"
 )
 
 const (
@@ -59,18 +56,14 @@ func buildTemplate(files ...string) *template.Template {
 var (
 	validator = regexp.MustCompile(`^[-a-zA-Z0-9]+$`)
 	templates = map[string]*template.Template{
-		"dne":       buildTemplate("html/dne.html"),
-		"error":     buildTemplate("html/error.html"),
-		"edit-post": buildTemplate("html/edit-post.html"),
-		"post":      buildTemplate("html/post.html"),
-		"home":      buildTemplate("html/home.html"),
-		"about":     buildTemplate("html/about.html"),
+		"dne":      buildTemplate("html/dne.html"),
+		"error":    buildTemplate("html/error.html"),
+		"editpost": buildTemplate("html/editpost.html"),
+		"post":     buildTemplate("html/post.html"),
+		"blog":     buildTemplate("html/blog.html"),
+		"about":    buildTemplate("html/about.html"),
 	}
 )
-
-func serveError(w http.ResponseWriter, err error) {
-	render(w, "error", nil)
-}
 
 func render(w http.ResponseWriter, tmpl string, data interface{}) {
 	err := templates[tmpl].ExecuteTemplate(w, "base.html", data)
@@ -79,32 +72,18 @@ func render(w http.ResponseWriter, tmpl string, data interface{}) {
 	}
 }
 
+func serveDne(w http.ResponseWriter)              { render(w, "dne", nil) }
+func serveError(w http.ResponseWriter, err error) { render(w, "error", nil) }
+
 type view func(http.ResponseWriter, *http.Request, string)
 
 func handler(path string, v view) (string, http.HandlerFunc) {
 	return path, func(w http.ResponseWriter, r *http.Request) {
 		slug := r.URL.Path[len(path):]
 		if !validator.MatchString(slug) {
-			render(w, "dne", nil)
+			serveDne(w)
 			return
 		}
 		v(w, r, slug)
-	}
-}
-
-func adminAuth(w http.ResponseWriter, r *http.Request, c ae.Context) {
-	u := user.Current(c)
-	if u == nil {
-		url, err := user.LoginURL(c, r.URL.String())
-		if err != nil {
-			serveError(w, err)
-			return
-		}
-		w.Header().Set("Location", url)
-		w.WriteHeader(http.StatusFound)
-		return
-	}
-	if !user.IsAdmin(c) {
-		render(w, "dne", nil)
 	}
 }
