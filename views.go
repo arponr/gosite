@@ -15,9 +15,17 @@ func getPost(r *http.Request, slug string) (ae.Context, *ds.Key, *Post, error) {
 }
 
 func viewPost(w http.ResponseWriter, r *http.Request, slug string) {
-	_, _, p, err := getPost(r, slug)
+	c, _, p, err := getPost(r, slug)
+	if err == ds.ErrNoSuchEntity {
+		render(w, "dne", nil)
+		return
+	}
 	if err != nil {
 		serveError(w, err)
+		return
+	}
+	if !p.Public {
+		adminAuth(w, r, c)
 		return
 	}
 	render(w, "post", p)

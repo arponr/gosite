@@ -9,6 +9,7 @@ type Post struct {
 	Slug, Title, ImgUrl string
 	Preview, Content    []byte
 	Created, Edited     time.Time
+	Public              bool
 }
 
 func NewPost(slug string) *Post {
@@ -16,6 +17,7 @@ func NewPost(slug string) *Post {
 }
 
 func (p *Post) init(r *http.Request, create bool) {
+	p.Public = r.FormValue("public") == "true"
 	p.Title = r.FormValue("title")
 	p.ImgUrl = r.FormValue("img_url")
 	p.Preview = []byte(r.FormValue("preview"))

@@ -1,10 +1,10 @@
 {{define "nav_a"}}{{end}}
 {{define "nav_b"}} active{{end}}
-{{define "nav_c"}}{{end}}
 
 {{define "content"}}
 <section>
   {{range .}}
+  {{if .Public}}
   <article class="preview">
     <h1 class="title"><a href="/post/{{.Slug}}">{{.Title}}</a></h1>
     <time class="created">({{.Created | date}})</time>.
@@ -12,6 +12,7 @@
       {{.Preview | markdown | printf "%s" | safe}}
     </span>
   </article>
+  {{end}}
 </section>
 {{end}}
 {{end}}

@@ -47,7 +47,7 @@ func markdown(input []byte) interface{} {
 }
 
 func buildTemplate(files ...string) *template.Template {
-	files = append(files, "html/dne.html", "html/base.html")
+	files = append(files, "html/base.html")
 	return template.Must(template.New("").Funcs(template.FuncMap{
 		"date":     date,
 		"datetime": datetime,
@@ -59,6 +59,8 @@ func buildTemplate(files ...string) *template.Template {
 var (
 	validator = regexp.MustCompile(`^[-a-zA-Z0-9]+$`)
 	templates = map[string]*template.Template{
+		"dne":       buildTemplate("html/dne.html"),
+		"error":     buildTemplate("html/error.html"),
 		"edit-post": buildTemplate("html/edit-post.html"),
 		"post":      buildTemplate("html/post.html"),
 		"home":      buildTemplate("html/home.html"),
@@ -67,7 +69,7 @@ var (
 )
 
 func serveError(w http.ResponseWriter, err error) {
-	http.Error(w, err.Error(), http.StatusInternalServerError)
+	render(w, "error", nil)
 }
 
 func render(w http.ResponseWriter, tmpl string, data interface{}) {
