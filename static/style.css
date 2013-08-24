@@ -214,13 +214,15 @@ p {
 .edit_post textarea {
     font: inherit;
     width: 100%;
-    margin: 5px 0;
+    margin: 10px 0;
+    padding-left: 10px;
     border: none;
+    border-left: 1px solid #f0f0f2;
     resize: none;
 }
 
 .edit_post .title, .edit_post .img_url {
-    height: 27px;
+    height: 14px;
 }
 
 .edit_post .preview {
