@@ -1,0 +1,16 @@
+{{define "nav_a"}}{{end}}
+{{define "nav_b"}} active{{end}}
+
+{{define "content"}}
+<form class="edit_post" action="/save-post/{{.Slug}}" method="POST">
+  <select name="public">
+    <option value="true"{{if .Public}} selected="selected"{{end}}>public</option>
+    <option value="false"{{if not .Public}} selected="selected"{{end}}>hidden</option>
+  </select>
+  <textarea name="title" class="title">{{.Title}}</textarea>
+  <textarea name="img_url" class="img_url">{{.ImgUrl}}</textarea>
+  <textarea name="preview" class="preview">{{printf "%s" .Preview}}</textarea>
+  <textarea name="content" class="content">{{printf "%s" .Content}}</textarea>
+  <input class="save" type="submit" value="save post">
+</form>
+{{end}}
