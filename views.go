@@ -24,7 +24,8 @@ func viewPost(w http.ResponseWriter, r *http.Request, slug string) {
 }
 
 func editPost(w http.ResponseWriter, r *http.Request, slug string) {
-	_, _, p, err := getPost(r, slug)
+	c, _, p, err := getPost(r, slug)
+	adminAuth(w, r, c)
 	if err != nil && err != ds.ErrNoSuchEntity {
 		serveError(w, err)
 		return
@@ -34,6 +35,7 @@ func editPost(w http.ResponseWriter, r *http.Request, slug string) {
 
 func savePost(w http.ResponseWriter, r *http.Request, slug string) {
 	c, k, p, err := getPost(r, slug)
+	adminAuth(w, r, c)
 	create := err == ds.ErrNoSuchEntity
 	if err != nil && !create {
 		serveError(w, err)

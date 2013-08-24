@@ -1,6 +1,8 @@
 package main
 
 import (
+	ae "appengine"
+	"appengine/user"
 	"html/template"
 	"net/http"
 	"regexp"
@@ -85,5 +87,22 @@ func handler(path string, v view) (string, http.HandlerFunc) {
 			return
 		}
 		v(w, r, slug)
+	}
+}
+
+func adminAuth(w http.ResponseWriter, r *http.Request, c ae.Context) {
+	u := user.Current(c)
+	if u == nil {
+		url, err := user.LoginURL(c, r.URL.String())
+		if err != nil {
+			serveError(w, err)
+			return
+		}
+		w.Header().Set("Location", url)
+		w.WriteHeader(http.StatusFound)
+		return
+	}
+	if !user.IsAdmin(c) {
+		render(w, "dne", nil)
 	}
 }
