@@ -3,14 +3,20 @@
 
 {{define "content"}}
 <section>
-  {{range .}}
+  {{range .P}}
   <article class="preview">
     <h1 class="title"><a href="/post/{{.Slug}}">{{.Title}}</a></h1>
-    <time class="created">({{.Created | date}})</time>.
+    <time class="created">({{date .Created}})</time>.
     <span class="text">
       {{.Preview | markdown | printf "%s" | safe}}
     </span>
   </article>
   {{end}}
 </section>
+{{if add .Page -1}}
+<a class="arrow left" href="{{.Path}}{{add .Page -1}}"></a>
+{{end}}
+{{if .More}}
+<a class="arrow right" href="{{.Path}}{{add .Page 1}}"></a>
+{{end}}
 {{end}}

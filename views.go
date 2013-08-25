@@ -11,7 +11,7 @@ import (
 func getPost(r *http.Request, slug string) (ae.Context, *ds.Key, *Post, error) {
 	c := ae.NewContext(r)
 	k := ds.NewKey(c, "post", slug, 0, nil)
-	p := NewPost(slug)
+	p := &Post{Slug: slug}
 	err := ds.Get(c, k, p)
 	return c, k, p, err
 }
@@ -62,32 +62,39 @@ func viewAbout(w http.ResponseWriter, r *http.Request) {
 	render(w, "about", nil)
 }
 
-func viewList(w http.ResponseWriter, r *http.Request, q *ds.Query, home bool) {
+const perPage = 10
+
+var qs = map[string]*ds.Query{
+	"/":             ds.NewQuery("post").Filter("Public =", true).Order("-Created"),
+	"/admin/queue/": ds.NewQuery("post").Filter("Public =", false).Order("-Edited"),
+}
+
+func viewList(w http.ResponseWriter, r *http.Request, path string, home bool, page int) {
+	q := qs[path].Offset((page - 1) * perPage).Limit(perPage + 1)
 	c := ae.NewContext(r)
-	var ps []*Post
-	_, err := q.GetAll(c, &ps)
+	list := &List{Path: path, Page: page}
+	_, err := q.GetAll(c, &list.P)
 	if err != nil {
 		serveError(w, err)
 		return
 	}
-	if !home && len(ps) == 0 {
+	if !home && len(list.P) == 0 {
 		serveDne(w)
 		return
 	}
-	render(w, "list", ps)
+	list.More = len(list.P) == perPage+1
+	if list.More {
+		list.P = list.P[:perPage]
+	}
+	render(w, "list", list)
 }
 
-var (
-	qBlog  = ds.NewQuery("post").Filter("Public =", true).Order("-Created")
-	qQueue = ds.NewQuery("post").Filter("Public =", false).Order("-Edited")
-)
-
 func init() {
-	http.HandleFunc(pageHandler("/admin/queue/", viewList, qQueue))
+	http.HandleFunc(pageHandler("/admin/queue/", viewList))
 	http.HandleFunc(slugHandler("/admin/editpost/", editPost))
 	http.HandleFunc(slugHandler("/admin/savepost/", savePost))
 
 	http.HandleFunc(staticHandler("/about/", viewAbout))
 	http.HandleFunc(slugHandler("/post/", viewPost))
-	http.HandleFunc(pageHandler("/", viewList, qBlog))
+	http.HandleFunc(pageHandler("/", viewList))
 }

@@ -12,18 +12,21 @@ type Post struct {
 	Public              bool
 }
 
-func NewPost(slug string) *Post {
-	return &Post{Slug: slug}
-}
-
 func (p *Post) init(r *http.Request, create bool) {
 	p.Public = r.FormValue("public") == "true"
 	p.Title = r.FormValue("title")
-	p.ImgUrl = r.FormValue("img_url")
+	p.ImgUrl = r.FormValue("imgurl")
 	p.Preview = []byte(r.FormValue("preview"))
 	p.Content = []byte(r.FormValue("content"))
 	if create {
 		p.Created = time.Now()
 	}
 	p.Edited = time.Now()
+}
+
+type List struct {
+	P    []*Post
+	Path string
+	Page int
+	More bool
 }

@@ -7,8 +7,6 @@ import (
 	"regexp"
 	"strconv"
 	"time"
-
-	ds "appengine/datastore"
 )
 
 const (
@@ -19,6 +17,7 @@ const (
 func date(t time.Time) interface{}     { return t.Format(fmtDate) }
 func datetime(t time.Time) interface{} { return t.Format(fmtDatetime) }
 func safe(s string) interface{}        { return template.HTML(s) }
+func add(i, j int) interface{}         { return i + j }
 
 var (
 	censor   = regexp.MustCompile(`\$\$[^\$]+\$\$|\$[^\$]+\$`)
@@ -49,6 +48,7 @@ func markdown(input []byte) interface{} {
 func buildTemplate(files ...string) *template.Template {
 	files = append(files, "html/base.html")
 	return template.Must(template.New("").Funcs(template.FuncMap{
+		"add":      add,
 		"date":     date,
 		"datetime": datetime,
 		"markdown": markdown,
@@ -90,26 +90,23 @@ func slugHandler(path string, v slugView) (string, http.HandlerFunc) {
 	}
 }
 
-const perPage = 10
+type pageView func(http.ResponseWriter, *http.Request, string, bool, int)
 
-type pageView func(http.ResponseWriter, *http.Request, *ds.Query, bool)
-
-func pageHandler(path string, v pageView, q *ds.Query) (string, http.HandlerFunc) {
+func pageHandler(path string, v pageView) (string, http.HandlerFunc) {
 	return path, func(w http.ResponseWriter, r *http.Request) {
 		home := len(r.URL.Path) == len(path)
 		var page int
 		if home {
-			page = 0
+			page = 1
 		} else {
-			n, err := strconv.ParseInt(r.URL.Path[len(path):], 10, 0)
-			if err != nil {
+			i, err := strconv.Atoi(r.URL.Path[len(path):])
+			if err != nil || i <= 0 {
 				serveDne(w)
 				return
 			}
-			page = int(n)
+			page = i
 		}
-		q = q.Offset(page * perPage).Limit(perPage)
-		v(w, r, q, home)
+		v(w, r, path, home, page)
 	}
 }
 
