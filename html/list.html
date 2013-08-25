@@ -4,7 +4,6 @@
 {{define "content"}}
 <section>
   {{range .}}
-  {{if .Public}}
   <article class="preview">
     <h1 class="title"><a href="/post/{{.Slug}}">{{.Title}}</a></h1>
     <time class="created">({{.Created | date}})</time>.
@@ -14,5 +13,4 @@
   </article>
   {{end}}
 </section>
-{{end}}
 {{end}}

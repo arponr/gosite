@@ -44,7 +44,7 @@ func editPost(w http.ResponseWriter, r *http.Request, slug string) {
 
 func savePost(w http.ResponseWriter, r *http.Request, slug string) {
 	c, k, p, err := getPost(r, slug)
-	create := err == ds.ErrNoSuchEntity
+	create := err == ds.ErrNoSuchEntity || !p.Public
 	if err != nil && !create {
 		serveError(w, err)
 		return
@@ -62,29 +62,32 @@ func viewAbout(w http.ResponseWriter, r *http.Request) {
 	render(w, "about", nil)
 }
 
-func viewBlog(w http.ResponseWriter, r *http.Request) {
+func viewList(w http.ResponseWriter, r *http.Request, q *ds.Query, home bool) {
 	c := ae.NewContext(r)
-	q := ds.NewQuery("post").Order("-Created").Limit(10)
 	var ps []*Post
 	_, err := q.GetAll(c, &ps)
 	if err != nil {
 		serveError(w, err)
+		return
 	}
-	render(w, "blog", ps)
-}
-
-func viewHome(w http.ResponseWriter, r *http.Request) {
-	if len(r.URL.Path) != 1 {
+	if !home && len(ps) == 0 {
 		serveDne(w)
 		return
 	}
-	viewBlog(w, r)
+	render(w, "list", ps)
 }
 
+var (
+	qBlog  = ds.NewQuery("post").Filter("Public =", true).Order("-Created")
+	qQueue = ds.NewQuery("post").Filter("Public =", false).Order("-Edited")
+)
+
 func init() {
-	http.HandleFunc(handler("/post/", viewPost))
-	http.HandleFunc("/about/", viewAbout)
-	http.HandleFunc("/", viewHome)
-	http.HandleFunc(handler("/admin/editpost/", editPost))
-	http.HandleFunc(handler("/admin/savepost/", savePost))
+	http.HandleFunc(pageHandler("/admin/queue/", viewList, qQueue))
+	http.HandleFunc(slugHandler("/admin/editpost/", editPost))
+	http.HandleFunc(slugHandler("/admin/savepost/", savePost))
+
+	http.HandleFunc(staticHandler("/about/", viewAbout))
+	http.HandleFunc(slugHandler("/post/", viewPost))
+	http.HandleFunc(pageHandler("/", viewList, qBlog))
 }

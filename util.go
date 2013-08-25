@@ -5,7 +5,10 @@ import (
 	"html/template"
 	"net/http"
 	"regexp"
+	"strconv"
 	"time"
+
+	ds "appengine/datastore"
 )
 
 const (
@@ -53,17 +56,14 @@ func buildTemplate(files ...string) *template.Template {
 	}).ParseFiles(files...))
 }
 
-var (
-	validator = regexp.MustCompile(`^[-a-zA-Z0-9]+$`)
-	templates = map[string]*template.Template{
-		"dne":      buildTemplate("html/dne.html"),
-		"error":    buildTemplate("html/error.html"),
-		"editpost": buildTemplate("html/editpost.html"),
-		"post":     buildTemplate("html/post.html"),
-		"blog":     buildTemplate("html/blog.html"),
-		"about":    buildTemplate("html/about.html"),
-	}
-)
+var templates = map[string]*template.Template{
+	"dne":      buildTemplate("html/dne.html"),
+	"error":    buildTemplate("html/error.html"),
+	"editpost": buildTemplate("html/editpost.html"),
+	"post":     buildTemplate("html/post.html"),
+	"list":     buildTemplate("html/list.html"),
+	"about":    buildTemplate("html/about.html"),
+}
 
 func render(w http.ResponseWriter, tmpl string, data interface{}) {
 	err := templates[tmpl].ExecuteTemplate(w, "base.html", data)
@@ -75,15 +75,50 @@ func render(w http.ResponseWriter, tmpl string, data interface{}) {
 func serveDne(w http.ResponseWriter)              { render(w, "dne", nil) }
 func serveError(w http.ResponseWriter, err error) { render(w, "error", nil) }
 
-type view func(http.ResponseWriter, *http.Request, string)
+var slugger = regexp.MustCompile(`^[-a-zA-Z0-9]+$`)
 
-func handler(path string, v view) (string, http.HandlerFunc) {
+type slugView func(http.ResponseWriter, *http.Request, string)
+
+func slugHandler(path string, v slugView) (string, http.HandlerFunc) {
 	return path, func(w http.ResponseWriter, r *http.Request) {
 		slug := r.URL.Path[len(path):]
-		if !validator.MatchString(slug) {
+		if !slugger.MatchString(slug) {
 			serveDne(w)
 			return
 		}
 		v(w, r, slug)
+	}
+}
+
+const perPage = 10
+
+type pageView func(http.ResponseWriter, *http.Request, *ds.Query, bool)
+
+func pageHandler(path string, v pageView, q *ds.Query) (string, http.HandlerFunc) {
+	return path, func(w http.ResponseWriter, r *http.Request) {
+		home := len(r.URL.Path) == len(path)
+		var page int
+		if home {
+			page = 0
+		} else {
+			n, err := strconv.ParseInt(r.URL.Path[len(path):], 10, 0)
+			if err != nil {
+				serveDne(w)
+				return
+			}
+			page = int(n)
+		}
+		q = q.Offset(page * perPage).Limit(perPage)
+		v(w, r, q, home)
+	}
+}
+
+func staticHandler(path string, v http.HandlerFunc) (string, http.HandlerFunc) {
+	return path, func(w http.ResponseWriter, r *http.Request) {
+		if len(r.URL.Path) != len(path) {
+			serveDne(w)
+			return
+		}
+		v(w, r)
 	}
 }
